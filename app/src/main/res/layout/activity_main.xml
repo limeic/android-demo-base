@@ -30,6 +30,20 @@
         />
 
     <Button
+        android:id="@+id/btnTransitHttpGetMsgSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送透传http消息(GET)"
+        />
+
+    <Button
+        android:id="@+id/btnTransitHttpPostMsgSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送透传http消息(Post)"
+        />
+
+    <Button
         android:id="@+id/btnStopService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
