@@ -9,13 +9,18 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+
 import tech.lemoncloud.BaseConnectionListener;
 import tech.lemoncloud.BaseMessageSendListener;
 import tech.lemoncloud.ELemonErrorCode;
 import tech.lemoncloud.LemonService;
 import tech.lemoncloud.event.BaseEventHandler;
-import tech.lemoncloud.net.pdu.LemonBasePackage;
+import tech.lemoncloud.protocol.LemonCommandTypes;
 import tech.lemoncloud.protocol.LemonGateway;
+import tech.lemoncloud.server.base.net.pdu.LemonBasePackage;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,8 +30,11 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonStop;
     private Button buttonTestPing;
     private Button buttonBindUserId;
+    private Button buttonTransitHttpGetMsg;
+    private Button buttonTransitHttpPostMsg;
 
     private String url;
+    private String demoHttpDomain;
     private String appId;
     private String userId;
 
@@ -81,11 +89,14 @@ public class MainActivity extends AppCompatActivity {
         buttonStop = findViewById(R.id.btnStopService);
         buttonTestPing = findViewById(R.id.btnTestPing);
         buttonBindUserId = findViewById(R.id.btnBindUserId);
+        buttonTransitHttpGetMsg = findViewById(R.id.btnTransitHttpGetMsgSend);
+        buttonTransitHttpPostMsg = findViewById(R.id.btnTransitHttpPostMsgSend);
     }
 
     private void initValues() {
         //url = "http://192.168.199.136:3101/route";
         url = "http://lb.test.lemoncloud.tech/route";
+        demoHttpDomain = "http://demo.http.lemoncloud.tech";
         appId = "54927e37f4a053b8c6de537ab7cdd479";
         userId = "123456789";
     }
@@ -148,6 +159,43 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // 发送透传Http消息
+        buttonTransitHttpGetMsg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String data = "{\"hello\": \"world\", \"age\": 11}";
+                String url = null;
+                try {
+                    url = demoHttpDomain + "/ping?data=" + URLEncoder.encode(data, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                HashMap<String, String> header = new HashMap<>();
+                header.put("Content-Type", "application/json;charset=UTF-8");
+                LemonService.getInstance().sendHttpMessage(
+                        url,
+                        "",
+                        LemonCommandTypes.HttpMethod.HTTP_METHOD_GET,
+                        header,
+                        new OnHttpSendListener(new OnHttpEventResp()));
+            }
+        });
+
+        buttonTransitHttpPostMsg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String data = "{\"hello\": \"world\", \"age\": 11}";
+                String url = demoHttpDomain + "/ping";
+                HashMap<String, String> header = new HashMap<>();
+                header.put("Content-Type", "application/json;charset=UTF-8");
+                LemonService.getInstance().sendHttpMessage(
+                        url,
+                        data,
+                        LemonCommandTypes.HttpMethod.HTTP_METHOD_POST,
+                        header,
+                        new OnHttpSendListener(new OnHttpEventResp()));
+            }
+        });
+
 
     }
 
@@ -191,6 +239,53 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String msg = "发送Ping结果. resp: " + resp;
+                    Toast.makeText(MainActivity.this, msg, msg.length()).show();
+                }
+            });
+            return null;
+        }
+    }
+
+    /**
+     * 处理http消息发送
+     */
+    private class OnHttpSendListener extends BaseMessageSendListener {
+
+        public OnHttpSendListener(BaseEventHandler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onFail(final ELemonErrorCode eLemonErrorCode) {
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    String msg = "发送Http消息失败. code: " + eLemonErrorCode;
+                    Toast.makeText(MainActivity.this, msg, msg.length()).show();
+                }
+            });
+        }
+
+        @Override
+        public void onSendComplete() {
+
+        }
+    }
+
+    /**
+     * 处理http消息回包
+     */
+    private class OnHttpEventResp extends BaseEventHandler {
+
+        @Override
+        public LemonBasePackage handleMessage(LemonBasePackage lemonBasePackage) throws Exception {
+            final LemonGateway.LemonPduTransitHttpMsgResp resp = LemonGateway.LemonPduTransitHttpMsgResp.parseFrom(lemonBasePackage.getBody());
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    String msg = "http返回数据:  " + resp;
                     Toast.makeText(MainActivity.this, msg, msg.length()).show();
                 }
             });
