@@ -18,6 +18,8 @@ import tech.lemoncloud.BaseMessageSendListener;
 import tech.lemoncloud.ELemonErrorCode;
 import tech.lemoncloud.LemonService;
 import tech.lemoncloud.event.BaseEventHandler;
+import tech.lemoncloud.event.TextNotifyEventHandler;
+import tech.lemoncloud.exception.BaseLemonException;
 import tech.lemoncloud.protocol.LemonCommandTypes;
 import tech.lemoncloud.protocol.LemonGateway;
 import tech.lemoncloud.server.base.net.pdu.LemonBasePackage;
@@ -104,14 +106,17 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 处理视图事件
      */
-    private void initEvents() {
+    private void initEvents() throws BaseLemonException {
+
+        // 注册广播处理事件
+        LemonService.getInstance().onNotify(new OnMsgNotify());
 
         // 启动服务
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-                    LemonService.getInstance().start(url, appId, listener);
+                    LemonService.getInstance().start();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -293,14 +298,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private class OnMsgNotify extends TextNotifyEventHandler {
+
+        @Override
+        public void handleMsg(final String content) {
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    String msg = "收到广播消息 " + content;
+                    Toast.makeText(MainActivity.this, msg, msg.length()).show();
+                }
+            });
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         initViews();
         initValues();
-        initEvents();
+
+        try {
+            LemonService.getInstance().init(url, appId, listener);
+            initEvents();
+        } catch (BaseLemonException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
 }
