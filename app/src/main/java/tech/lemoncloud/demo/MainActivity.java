@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initValues() {
         //url = "http://192.168.199.136:3101/route";
-        url = "http://lb.test.lemoncloud.tech/route";
+        url = "http://lb.lemoncloud.tech/route";
         demoHttpDomain = "http://demo.http.lemoncloud.tech";
         appId = "54927e37f4a053b8c6de537ab7cdd479";
         userId = "123456789";
