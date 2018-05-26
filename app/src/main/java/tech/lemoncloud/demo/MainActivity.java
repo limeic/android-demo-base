@@ -9,20 +9,24 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import tech.lemoncloud.BaseConnectionListener;
 import tech.lemoncloud.BaseMessageSendListener;
 import tech.lemoncloud.ELemonErrorCode;
 import tech.lemoncloud.LemonService;
+import tech.lemoncloud.dto.sys.BindUserResponse;
+import tech.lemoncloud.dto.sys.PingResponse;
 import tech.lemoncloud.event.BaseEventHandler;
 import tech.lemoncloud.event.TextNotifyEventHandler;
 import tech.lemoncloud.exception.BaseLemonException;
-import tech.lemoncloud.protocol.LemonCommandTypes;
-import tech.lemoncloud.protocol.LemonGateway;
-import tech.lemoncloud.server.base.net.pdu.LemonBasePackage;
+import tech.lemoncloud.net.pdu.LemonBasePackage;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -96,10 +100,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initValues() {
-        //url = "http://192.168.199.136:3101/route";
-        url = "http://lb.lemoncloud.tech/route";
+        // 测试url
+        url = "http://test.api.limeic.com/api/connectors/allocation";
         demoHttpDomain = "http://demo.http.lemoncloud.tech";
-        appId = "54927e37f4a053b8c6de537ab7cdd479";
+        appId = "307acc4411343315889eefe56e277f6e";
         userId = "123456789";
     }
 
@@ -147,13 +151,18 @@ public class MainActivity extends AppCompatActivity {
                 // 测试绑定用户ID
                 LemonService.getInstance().bindUserId(userId, new BaseEventHandler() {
                     @Override
-                    public LemonBasePackage handleMessage(LemonBasePackage lemonBasePackage) throws Exception {
-                        final LemonGateway.LemonPduBindUserResp resp = LemonGateway.LemonPduBindUserResp.parseFrom(lemonBasePackage.getBody());
+                    public LemonBasePackage handleMessage(LemonBasePackage message) {
+                        System.out.println("message: " + message);
+                        if ( message == null ) {
+                            return null;
+                        }
+                        final BindUserResponse response = JSON.parseObject(message.getBody(), BindUserResponse.class);
+                        System.out.println("bind user resp: " + response);
                         Handler handler = new Handler(Looper.getMainLooper());
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                String msg = "绑定用户返回结果. resp: " + resp;
+                                String msg = "绑定用户结果. resp: " + response;
                                 Toast.makeText(MainActivity.this, msg, msg.length()).show();
                             }
                         });
@@ -174,13 +183,11 @@ public class MainActivity extends AppCompatActivity {
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-                HashMap<String, String> header = new HashMap<>();
-                header.put("Content-Type", "application/json;charset=UTF-8");
                 LemonService.getInstance().sendHttpMessage(
                         url,
                         "",
-                        LemonCommandTypes.HttpMethod.HTTP_METHOD_GET,
-                        header,
+                        "GET",
+                        null,
                         new OnHttpSendListener(new OnHttpEventResp()));
             }
         });
@@ -195,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
                 LemonService.getInstance().sendHttpMessage(
                         url,
                         data,
-                        LemonCommandTypes.HttpMethod.HTTP_METHOD_POST,
+                        "POST",
                         header,
                         new OnHttpSendListener(new OnHttpEventResp()));
             }
@@ -237,13 +244,18 @@ public class MainActivity extends AppCompatActivity {
     private class OnPingEventResp extends BaseEventHandler {
 
         @Override
-        public LemonBasePackage handleMessage(LemonBasePackage lemonBasePackage) throws Exception {
-            final LemonGateway.LemonPduPingResp resp = LemonGateway.LemonPduPingResp.parseFrom(lemonBasePackage.getBody());
+        public LemonBasePackage handleMessage(LemonBasePackage message) {
+            if ( message == null ) {
+                System.out.println("response message is null");
+                return null;
+            }
+            final PingResponse response = JSON.parseObject(message.getBody(), PingResponse.class);
+            System.out.println("ping response: " + response);
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    String msg = "发送Ping结果. resp: " + resp;
+                    String msg = "发送Ping结果. resp: " + response;
                     Toast.makeText(MainActivity.this, msg, msg.length()).show();
                 }
             });
@@ -284,13 +296,22 @@ public class MainActivity extends AppCompatActivity {
     private class OnHttpEventResp extends BaseEventHandler {
 
         @Override
-        public LemonBasePackage handleMessage(LemonBasePackage lemonBasePackage) throws Exception {
-            final LemonGateway.LemonPduTransitHttpMsgResp resp = LemonGateway.LemonPduTransitHttpMsgResp.parseFrom(lemonBasePackage.getBody());
+        public LemonBasePackage handleMessage(LemonBasePackage message) {
+            if ( message == null ) {
+                System.out.println("response message is null");
+                return null;
+            }
+            final PingResponse response = JSON.parseObject(message.getBody(), PingResponse.class);
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    String msg = "http返回数据:  " + resp;
+                    String msg = null;
+                    try {
+                        msg = "http返回数据. resp: " + URLDecoder.decode(response.getMessage(), "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
                     Toast.makeText(MainActivity.this, msg, msg.length()).show();
                 }
             });
@@ -323,8 +344,11 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         initValues();
 
+        // 测试
+        LemonService.getInstance().changeUrl(url);
+
         try {
-            LemonService.getInstance().init(url, appId, listener);
+            LemonService.getInstance().init(appId, listener);
             initEvents();
         } catch (BaseLemonException e) {
             e.printStackTrace();
