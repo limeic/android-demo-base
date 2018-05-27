@@ -157,14 +157,14 @@ public class MainActivity extends AppCompatActivity {
                         }
                         final BindUserResponse response = JSON.parseObject(message.getBody(), BindUserResponse.class);
                         System.out.println("bind user resp: " + response);
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                String msg = "绑定用户结果. resp: " + response;
-                                Toast.makeText(MainActivity.this, msg, msg.length()).show();
-                            }
-                        });
+//                        Handler handler = new Handler(Looper.getMainLooper());
+//                        handler.post(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                String msg = "绑定用户结果. resp: " + response;
+//                                Toast.makeText(MainActivity.this, msg, msg.length()).show();
+//                            }
+//                        });
                         return null;
                     }
                 });
@@ -250,14 +250,14 @@ public class MainActivity extends AppCompatActivity {
             }
             final PingResponse response = JSON.parseObject(message.getBody(), PingResponse.class);
             System.out.println("ping response: " + response);
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    String msg = "发送Ping结果. resp: " + response;
-                    Toast.makeText(MainActivity.this, msg, msg.length()).show();
-                }
-            });
+//            Handler handler = new Handler(Looper.getMainLooper());
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    String msg = "发送Ping结果. resp: " + response;
+//                    Toast.makeText(MainActivity.this, msg, msg.length()).show();
+//                }
+//            });
             return null;
         }
     }
@@ -301,19 +301,24 @@ public class MainActivity extends AppCompatActivity {
                 return null;
             }
             final PingResponse response = JSON.parseObject(message.getBody(), PingResponse.class);
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    String msg = null;
-                    try {
-                        msg = "http返回数据. resp: " + URLDecoder.decode(response.getMessage(), "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
-                    Toast.makeText(MainActivity.this, msg, msg.length()).show();
-                }
-            });
+
+            System.out.println("http response: " + response);
+
+//            String msg = null;
+//            try {
+//                msg = "http返回数据. resp: " + URLDecoder.decode(response.getMessage(), "UTF-8");
+//            } catch (UnsupportedEncodingException e) {
+//                e.printStackTrace();
+//            }
+//
+//            Handler handler = new Handler(Looper.getMainLooper());
+//            final String finalMsg = msg;
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Toast.makeText(MainActivity.this, finalMsg, finalMsg.length()).show();
+//                }
+//            });
             return null;
         }
     }
