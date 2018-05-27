@@ -21,6 +21,7 @@ import tech.lemoncloud.BaseMessageSendListener;
 import tech.lemoncloud.ELemonErrorCode;
 import tech.lemoncloud.LemonService;
 import tech.lemoncloud.dto.sys.BindUserResponse;
+import tech.lemoncloud.dto.sys.HttpDeliverResponse;
 import tech.lemoncloud.dto.sys.PingResponse;
 import tech.lemoncloud.event.BaseEventHandler;
 import tech.lemoncloud.event.TextNotifyEventHandler;
@@ -300,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("response message is null");
                 return null;
             }
-            final PingResponse response = JSON.parseObject(message.getBody(), PingResponse.class);
+            final HttpDeliverResponse response = JSON.parseObject(message.getBody(), HttpDeliverResponse.class);
 
             System.out.println("http response: " + response);
 
